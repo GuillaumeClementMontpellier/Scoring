@@ -31,37 +31,10 @@ log_reg <- glm(formula = Class ~ ., data = train_data)
 coef(log_reg)
 summary(log_reg)
 
-
-
-
 ## Backward Selection
 
 back_sel <- step(log_reg, direction="backward")
 summary(back_sel)
-
-# Selection :  Cl.thickness + Cell.size + Cell.shape + Epith.c.size + Bare.nuclei + Bl.cromatin + Normal.nucleoli
-
-
-## Forward Selection
-
-log_reg0 <- glm(Class ~ 1, data = train_data, family="binomial")
-
-forward_sel <- step(log_reg0, direction="forward",
-                    scope=list(lower=log_reg0, 
-                               upper=~
-                                 Cl.thickness+
-                                 Cell.size+
-                                 Cell.shape+
-                                 Marg.adhesion+
-                                 Epith.c.size+
-                                 Bare.nuclei+
-                                 Bl.cromatin+
-                                 Normal.nucleoli+
-                                 Mitoses))
-summary(forward_sel)
-
-# Selection : Cl.thickness + Cell.size +Cell.shape + ...+ Bare.nuclei + Bl.cromatin + Marg.adhesion + Mitoses
-
 
 
 ## Valeurs prédites
@@ -71,17 +44,9 @@ hat_y_R <- as.integer(hat_pi_R > 0.5)
 hat_pi_back <- predict(back_sel, type="response", newdata = test_data)
 hat_y_back <- as.integer(hat_pi_back > 0.5)
 
-hat_pi_for <- predict(forward_sel, type="response", newdata = test_data)
-hat_y_for <- as.integer(hat_pi_for > 0.5)
-
 ## Matrice de confusion
 table(hat_y_R, test_data$Class)
 table(hat_y_back, test_data$Class)
-table(hat_y_for, test_data$Class)
-
-confusionMatrix(data = as.factor(hat_y_for),
-                reference = as.factor(test_data$Class),
-                positive = "1")
 
 ## Selection du seuil
 
@@ -118,7 +83,6 @@ vis_sens_spec <- function(hat_pi_x){
 }
 
 vis_sens_spec(hat_pi_R)
-vis_sens_spec(hat_pi_for)
 vis_sens_spec(hat_pi_back)
 
 ## courbe roc et auc
@@ -137,14 +101,8 @@ vis_roc <- function(hat_pi_x) {
 }
 
 vis_roc(hat_pi_R)
-vis_roc(hat_pi_for)
 vis_roc(hat_pi_back)
 
 # AUC
 auc(test_data$Class, hat_pi_R)
-auc(test_data$Class, hat_pi_for)
 auc(test_data$Class, hat_pi_back)
-
-# Question : Peut-on prédire le statut de la tumeur à partir des différentes mesures ?
-
-# Reponse = au vu du AUC elevé, oui
